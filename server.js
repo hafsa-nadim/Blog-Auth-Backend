@@ -8,14 +8,29 @@ import authRoutes from './routes/auth.js';
 const app = express();
 connectDB();
 
+const allowedOrigins = [
+  'https://blog-auth-frontend.vercel.app',
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
+console.log('Allowed origins:', allowedOrigins); // debug log
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL,
-  credentials: true
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log('Blocked origin:', origin); // debug log
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
 }));
+
 app.use(express.json());
 app.use(cookieParser());
 
-app.use('/auth', authRoutes); // ✅ changed from /api/auth to /auth
+app.use('/auth', authRoutes);
 
 app.get('/', (req, res) => res.send('API is running...'));
 
